@@ -11,8 +11,8 @@ import kfp
 def nnpipeline(datatype: str):
   dataset= load_dataset(datatype)
   src = build_src()
-  loud= loads(src.outputs["source"])
-  #import src.outputs["source"]
+  load_task= loads(src.outputs["source"],dataset.outputs["dataset"])
+ 
   
 
 
@@ -22,6 +22,6 @@ compiler.Compiler().compile(pipeline_func=nnpipeline, package_path='pipeline.jso
 client = kfp.Client()
 client.create_run_from_pipeline_func(
     nnpipeline,
-    arguments={'datatype': "mnist"},
+    arguments={'datatype': "fmnist"},
     mode=kfp.dsl.PipelineExecutionMode.V2_COMPATIBLE,
 )
