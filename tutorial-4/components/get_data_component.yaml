@@ -1,0 +1,24 @@
+name: get_data
+description: Gets the specified number of lines from the input file.
+
+inputs:
+- {name: githubpath, type: String, description: 'Link github repository'}
+- {name: folder, type: String, description: 'folder name'}
+
+outputs:
+- {name: output1path, type: Artifact, description: 'output path data.'}
+
+implementation:
+  container:
+    image: skywarrd/data_component
+    command: [
+      python3, 
+      # Path of the program inside the container
+      /pipelines/component/src/data_component.py,
+      --githubpath,
+      {inputValue: githubpath},
+      --folder,
+      {inputValue: folder},
+      --output1path, 
+      {outputPath: output1path},
+    ]

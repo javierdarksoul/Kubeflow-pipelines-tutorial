@@ -8,7 +8,8 @@ from kfp.v2.dsl import (
     Artifact,
 )
 
-get_model=kfp.components.load_component_from_file("get_model_component.yaml")
+get_model=kfp.components.load_component_from_file("components/get_model_component.yaml")
+get_data=kfp.components.load_component_from_file("components/get_data_component.yaml")
 
 @component(
     packages_to_install=['torch','torchvision'],
@@ -25,15 +26,17 @@ def loads(source: Input[Artifact]):
   name='nn-pipeline',
   description='un ejemplo de una pipeline completa de un modelo',
 )
-def nnpipeline(datatype: str):
+def nnpipeline():
   src = get_model(githubpath='https://github.com/javierdarksoul/src_test.git')
-  load_task= loads(src.outputs['output1path'])
+  data = get_data(githubpath=' https://github.com/javierdarksoul/data_test.git',folder ="FashionMNIST")
+ 
+  #load_task= loads(src.outputs['output1path'])
 
 compiler.Compiler().compile(pipeline_func=nnpipeline, package_path='pipeline.json')
 
 client = kfp.Client()
 client.create_run_from_pipeline_func(
     nnpipeline,
-    arguments={'datatype': "fmnist"},
+    arguments={},
     mode=kfp.dsl.PipelineExecutionMode.V2_COMPATIBLE,
 )
