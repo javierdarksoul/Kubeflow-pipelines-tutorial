@@ -8,6 +8,7 @@ from kfp.v2.dsl import (
     Artifact,
 )
 
+
 get_model=kfp.components.load_component_from_file("components/get_model_component.yaml")
 get_data=kfp.components.load_component_from_file("components/get_data_component.yaml")
 
@@ -15,12 +16,20 @@ get_data=kfp.components.load_component_from_file("components/get_data_component.
     packages_to_install=['torch','torchvision'],
     base_image='python:3.8',
 )
-def loads(source: Input[Artifact]):
+def loads(dataset: Input[Artifact],source: Input[Artifact]):
+    import pickle
+    import torch
     import tarfile
     tarfile.open(name=source.path, mode="r").extractall('.')
-    from src_test.src.nn import my_nn
-    mynn = my_nn()
-    print(mynn)
+    from src.nn import my_nn
+    with open(dataset.path,'rb') as file:
+        dataloaders = pickle.load(file)
+    train_loader=dataloaders["train_loader"]
+    valid_loader=dataloaders["valid_loader"]
+    print(train_loader)
+    for image,label in train_loader:
+        print(image.shape)
+        break
 
 @dsl.pipeline(
   name='nn-pipeline',
@@ -29,8 +38,7 @@ def loads(source: Input[Artifact]):
 def nnpipeline():
   src = get_model(githubpath='https://github.com/javierdarksoul/src_test.git')
   data = get_data(githubpath=' https://github.com/javierdarksoul/data_test.git',folder ="FashionMNIST")
- 
-  #load_task= loads(src.outputs['output1path'])
+  load_task= loads(data.outputs['output1path'],src.outputs['output1path'])
 
 compiler.Compiler().compile(pipeline_func=nnpipeline, package_path='pipeline.json')
 

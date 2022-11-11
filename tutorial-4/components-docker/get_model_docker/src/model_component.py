@@ -12,6 +12,7 @@ print("begin")
 project_name=args.githubpath[args.githubpath.rfind("/") +1 : -4]
 os.system("git clone " + args.githubpath)
 
+os.chdir(project_name)
 with tarfile.open(args.output1path, "w") as tar:
-  tar.add( project_name+"/src/nn.py")
+  tar.add( "src/nn.py")
 print("Done!!")
