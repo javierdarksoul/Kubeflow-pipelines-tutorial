@@ -1,0 +1,21 @@
+name: get_model
+description: Gets the specified number of lines from the input file.
+
+inputs:
+- {name: githubpath, type: String, description: 'Link github repository'}
+
+outputs:
+- {name: output1path, type: Artifact, description: 'output path data.'}
+
+implementation:
+  container:
+    image: skywarrd/model_component
+    command: [
+      python3, 
+      # Path of the program inside the container
+      /pipelines/component/src/model_component.py,
+      --githubpath,
+      {inputValue: githubpath},
+      --output1path, 
+      {outputPath: output1path},
+    ]

@@ -1,0 +1,367 @@
+{
+  "pipelineSpec": {
+    "components": {
+      "comp-get-model": {
+        "executorLabel": "exec-get-model",
+        "inputDefinitions": {
+          "parameters": {
+            "githubpath": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "output1path": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      },
+      "comp-getdata": {
+        "executorLabel": "exec-getdata",
+        "inputDefinitions": {
+          "parameters": {
+            "folder": {
+              "type": "STRING"
+            },
+            "githubpath": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "testloader": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            },
+            "trainloader": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      },
+      "comp-test": {
+        "executorLabel": "exec-test",
+        "inputDefinitions": {
+          "artifacts": {
+            "dataset": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            },
+            "source": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            },
+            "weights": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "metrics": {
+              "artifactType": {
+                "schemaTitle": "system.ClassificationMetrics",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      },
+      "comp-train": {
+        "executorLabel": "exec-train",
+        "inputDefinitions": {
+          "artifacts": {
+            "dataset": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            },
+            "source": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "metrics": {
+              "artifactType": {
+                "schemaTitle": "system.Metrics",
+                "schemaVersion": "0.0.1"
+              }
+            },
+            "weights": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      }
+    },
+    "deploymentSpec": {
+      "executors": {
+        "exec-get-model": {
+          "container": {
+            "command": [
+              "python3",
+              "/pipelines/component/src/model_component.py",
+              "--githubpath",
+              "{{$.inputs.parameters['githubpath']}}",
+              "--output1path",
+              "{{$.outputs.artifacts['output1path'].path}}"
+            ],
+            "image": "skywarrd/model_component"
+          }
+        },
+        "exec-getdata": {
+          "container": {
+            "command": [
+              "python3",
+              "/pipelines/component/src/data_component.py",
+              "--githubpath",
+              "{{$.inputs.parameters['githubpath']}}",
+              "--folder",
+              "{{$.inputs.parameters['folder']}}",
+              "--trainloader",
+              "{{$.outputs.artifacts['trainloader'].path}}",
+              "--testloader",
+              "{{$.outputs.artifacts['testloader'].path}}"
+            ],
+            "image": "skywarrd/data_component"
+          }
+        },
+        "exec-test": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "test"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'numpy' 'torch' 'torchvision' 'scikit-learn' 'kfp==1.8.11' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef test(source: Input[Artifact],  weights: Input[Artifact], dataset: Input[Artifact], metrics: Output[ClassificationMetrics]):\n    import pickle\n    import torch\n    import tarfile\n    from sklearn.metrics import confusion_matrix\n    tarfile.open(name=source.path, mode=\"r\").extractall('.')\n    from src.nn import my_nn\n    with open(dataset.path,'rb') as file:\n        dataloaders = pickle.load(file)\n    model= my_nn()\n    test_loader=dataloaders[\"test_loader\"]\n    model.load_state_dict(torch.load(weights.path))\n    y_preds_list=[]\n    y_real_list=[]\n    for image,label in test_loader:\n        output = model(image.reshape(-1,28*28)).argmax(dim=1)\n        y_preds= output.detach().numpy()\n        y_real= label.detach().numpy()\n        for k in range(len(y_preds)):\n            y_preds_list.append(y_preds.item(k))\n            y_real_list.append(y_real.item(k))\n\n    metrics.log_confusion_matrix(\n        ['T-shirt', 'Trouser', 'Pullover','Dress','Coat', 'Sandal' , 'Shirt','Sneaker','Bag','Ankle Boot'],\n        confusion_matrix(y_real_list, y_preds_list).tolist() # .tolist() to convert np array to list.\n    )\n\n"
+            ],
+            "image": "python:3.8"
+          }
+        },
+        "exec-train": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "train"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'torch' 'torchvision' 'kfp==1.8.11' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef train(source: Input[Artifact],dataset: Input[Artifact], weights: Output[Artifact] ,metrics: Output[Metrics]):\n    import pickle\n    import torch\n    import tarfile\n    tarfile.open(name=source.path, mode=\"r\").extractall('.')\n    from src.nn import my_nn\n    with open(dataset.path,'rb') as file:\n        dataloaders = pickle.load(file)\n    model= my_nn()\n    train_loader=dataloaders[\"train_loader\"]\n    valid_loader=dataloaders[\"valid_loader\"]\n    den_valid = valid_loader.__len__()*valid_loader.batch_size\n    criterion = torch.nn.CrossEntropyLoss()\n    global_loss = 1e10\n    optimizer = torch.optim.Adam(model.parameters(),1e-3)\n    for epoch in range(10):\n        print(epoch)\n        train_loss=0.0\n        for image,label in train_loader:\n            optimizer.zero_grad()\n            output=model(image.reshape(-1,28*28))\n            loss = criterion(output,label)\n            loss.backward()\n            optimizer.step()\n            train_loss+= loss.item()\n\n        valid_loss=0.0\n        for image,label in valid_loader:\n            y_pred=model(image.reshape(-1,28*28))\n            loss = criterion(y_pred,label)\n            valid_loss+= loss.item()\n            if valid_loss<global_loss:\n                print(\"Se encontr\u00f3 un mejor modelo en la epoca: %i\\nLoss Actual: =%f\" % (epoch, valid_loss/den_valid))\n                metrics.log_metric('Loss', valid_loss/den_valid)\n                global_loss = valid_loss\n                torch.save(model.state_dict(), weights.path)\n\n"
+            ],
+            "image": "python:3.8"
+          }
+        }
+      }
+    },
+    "pipelineInfo": {
+      "name": "nn-pipeline"
+    },
+    "root": {
+      "dag": {
+        "outputs": {
+          "artifacts": {
+            "test-metrics": {
+              "artifactSelectors": [
+                {
+                  "outputArtifactKey": "metrics",
+                  "producerSubtask": "test"
+                }
+              ]
+            },
+            "train-metrics": {
+              "artifactSelectors": [
+                {
+                  "outputArtifactKey": "metrics",
+                  "producerSubtask": "train"
+                }
+              ]
+            }
+          }
+        },
+        "tasks": {
+          "get-model": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-get-model"
+            },
+            "inputs": {
+              "parameters": {
+                "githubpath": {
+                  "runtimeValue": {
+                    "constantValue": {
+                      "stringValue": "https://github.com/javierdarksoul/src_test.git"
+                    }
+                  }
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "get-model"
+            }
+          },
+          "getdata": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-getdata"
+            },
+            "inputs": {
+              "parameters": {
+                "folder": {
+                  "runtimeValue": {
+                    "constantValue": {
+                      "stringValue": "FashionMNIST"
+                    }
+                  }
+                },
+                "githubpath": {
+                  "runtimeValue": {
+                    "constantValue": {
+                      "stringValue": " https://github.com/javierdarksoul/data_test.git"
+                    }
+                  }
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "getdata"
+            }
+          },
+          "test": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-test"
+            },
+            "dependentTasks": [
+              "get-model",
+              "getdata",
+              "train"
+            ],
+            "inputs": {
+              "artifacts": {
+                "dataset": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "testloader",
+                    "producerTask": "getdata"
+                  }
+                },
+                "source": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "output1path",
+                    "producerTask": "get-model"
+                  }
+                },
+                "weights": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "weights",
+                    "producerTask": "train"
+                  }
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "test"
+            }
+          },
+          "train": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-train"
+            },
+            "dependentTasks": [
+              "get-model",
+              "getdata"
+            ],
+            "inputs": {
+              "artifacts": {
+                "dataset": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "trainloader",
+                    "producerTask": "getdata"
+                  }
+                },
+                "source": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "output1path",
+                    "producerTask": "get-model"
+                  }
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "train"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "test-metrics": {
+            "artifactType": {
+              "schemaTitle": "system.ClassificationMetrics",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "train-metrics": {
+            "artifactType": {
+              "schemaTitle": "system.Metrics",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "schemaVersion": "2.0.0",
+    "sdkVersion": "kfp-1.8.11"
+  },
+  "runtimeConfig": {}
+}

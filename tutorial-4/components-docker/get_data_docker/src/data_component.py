@@ -5,13 +5,16 @@ import pickle
 import sys
 from torch.utils.data import DataLoader, SubsetRandomSampler
 import torchvision
+from pathlib import Path
 parser = argparse.ArgumentParser(description='My program description')
 # Paths must be passed in, not hardcoded
 parser.add_argument('--githubpath', type=str,
   help='Path al repositorio git, si es privado, proporcionarlo con el token')
 parser.add_argument('--folder', type=str,
   help='Nombre de la carpeta a ser pulleada')
-parser.add_argument('--output1path', type=str,
+parser.add_argument('--trainloader', type=str,
+  help='Path a los archivos comprimidos.')
+parser.add_argument('--testloader', type=str,
   help='Path a los archivos comprimidos.')
 args = parser.parse_args()
 
@@ -25,12 +28,20 @@ os.system("dvc pull "+args.folder)
 #  tar.add(args.folder)
 
 train_data= torchvision.datasets.FashionMNIST( ".", train=True, transform=torchvision.transforms.ToTensor())
+test_data= torchvision.datasets.FashionMNIST( ".", train=False, transform=torchvision.transforms.ToTensor())
 idx = list(range(len(train_data)))
 split = int(0.7*len(idx))
 train_loader= DataLoader(train_data,batch_size=128,sampler=SubsetRandomSampler(idx[:split])) 
 valid_loader= DataLoader(train_data,batch_size=128, sampler=SubsetRandomSampler(idx[split:])) 
+test_loader= DataLoader(test_data,batch_size=128)
 # open a file, where you ant to store the data
-dataload = {"train_loader": train_loader, "valid_loader": valid_loader}
-with open(args.output1path,'wb') as file:
-  pickle.dump(dataload, file)
+Path(args.trainloader).parent.mkdir(parents=True, exist_ok=True)
+Path(args.testloader).parent.mkdir(parents=True, exist_ok=True)
+
+trainload = {"train_loader": train_loader, "valid_loader": valid_loader}
+with open(args.trainloader,'wb') as file:
+  pickle.dump(trainload, file)
+testload = {"test_loader": test_loader}
+with open(args.testloader,'wb') as file:
+  pickle.dump(testload, file)
 print("Done!!")

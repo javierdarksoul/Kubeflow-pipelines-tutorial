@@ -38,7 +38,7 @@ def loads(dataset: Input[Artifact],source: Input[Artifact]):
 def nnpipeline():
   src = get_model(githubpath='https://github.com/javierdarksoul/src_test.git')
   data = get_data(githubpath=' https://github.com/javierdarksoul/data_test.git',folder ="FashionMNIST")
-  load_task= loads(data.outputs['output1path'],src.outputs['output1path'])
+  load_task= loads(data.outputs['trainloader'],src.outputs['output1path'])
 
 compiler.Compiler().compile(pipeline_func=nnpipeline, package_path='pipeline.json')
 
