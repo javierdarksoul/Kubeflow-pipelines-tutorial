@@ -1,0 +1,9 @@
+name: buid_torchserve
+description: convert torch model to MAR model for deployment.
+implementation:
+  container:
+    image: skywarrd/build_torchserve
+    command: [
+      python, 
+      /home/app/cloudbuild.py
+    ]

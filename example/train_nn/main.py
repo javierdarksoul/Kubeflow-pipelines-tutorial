@@ -7,6 +7,9 @@ from components.pythoncomponents.train import train
 from components.pythoncomponents.test import test
 get_model=kfp.components.load_component_from_file("components/yaml-components/get_model_component.yaml")
 get_data=kfp.components.load_component_from_file("components/yaml-components/get_data_component.yaml")
+mar_comp=kfp.components.load_component_from_file("components/yaml-components/component_mar.yaml")
+build_torchserve=kfp.components.load_component_from_file("components/yaml-components/build_torchserve_component.yaml")
+
 
 
 @dsl.pipeline(
@@ -14,11 +17,14 @@ get_data=kfp.components.load_component_from_file("components/yaml-components/get
   description='un ejemplo de una pipeline completa de un modelo',
 )
 def nnpipeline():
-  src = get_model(githubpath='https://github.com/javierdarksoul/src_test.git')
-  data = get_data(githubpath=' https://github.com/javierdarksoul/data_test.git',folder ="FashionMNIST")
-  train_task= train(src.outputs["output1path"], data.outputs["trainloader"])#.add_node_selector_constraint('cloud.google.com/gke-accelerator','NVIDIA_TESLA_P100').set_gpu_limit(1))
-  test(src.outputs["output1path"],train_task.outputs["weights"], data.outputs["testloader"])
- 
+  #src = get_model(githubpath='https://github.com/javierdarksoul/src_test.git')
+  #data = get_data(githubpath=' https://github.com/javierdarksoul/data_test.git',folder ="FashionMNIST")
+  #train_task= train(src.outputs["output1path"], data.outputs["trainloader"])#.add_node_selector_constraint('cloud.google.com/gke-accelerator','NVIDIA_TESLA_P100').set_gpu_limit(1))
+  #test(src.outputs["output1path"],train_task.outputs["weights"], data.outputs["testloader"])
+  #mar_comp(src.outputs["output1path"],"example-model",train_task.outputs["weights"] )
+  task=build_torchserve()
+  task.set_caching_options(False)
+  
 
 compiler.Compiler().compile(pipeline_func=nnpipeline, package_path='pipeline.json')
 
@@ -27,13 +33,13 @@ cred = google.auth.load_credentials_from_file("../../../credentials/credentials.
 job = aip.PipelineJob(
     display_name="train_nn_pipeline",
     template_path="pipeline.json",
-    pipeline_root="gs://test-bucket-dvc",
+    pipeline_root="gs://example-vertex-ai",
     credentials=cred[0],
-    project	= "nerf-360414",
+    project	= "zippedi-project-01",
     location = "us-east1",
     parameter_values={
     }
 )
 #print(job)
 job.submit()
-#os.system("rm pipeline.json")
+os.system("rm pipeline.json")

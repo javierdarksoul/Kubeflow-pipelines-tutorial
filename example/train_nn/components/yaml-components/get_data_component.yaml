@@ -1,0 +1,27 @@
+name: getdata
+description: Gets the specified number of lines from the input file.
+
+inputs:
+- {name: githubpath, type: String, description: 'Link github repository'}
+- {name: folder, type: String, description: 'folder name'}
+
+outputs:
+- {name: trainloader, type: Artifact, description: 'output path data.'}
+- {name: testloader, type: Artifact, description: 'output path data.'}
+
+implementation:
+  container:
+    image: us-docker.pkg.dev/zippedi-project-01/kubeflow-components/get-data@sha256:a13523a2c5764a7ed34019ab15db33b23bed69f3f871ffbc2c635ebd36892631
+    command: [
+      python3, 
+      # Path of the program inside the container
+      /pipelines/component/src/data_component.py,
+      --githubpath,
+      {inputValue: githubpath},
+      --folder,
+      {inputValue: folder},
+      --trainloader, 
+      {outputPath: trainloader},
+      --testloader,
+      {outputPath: testloader}
+    ]

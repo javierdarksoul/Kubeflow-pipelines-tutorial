@@ -1,0 +1,20 @@
+name: mar_model
+description: convert torch model to MAR model for deployment.
+inputs:
+- {name: input_1, type: Artifact, description: 'input 1 model.tar'}
+- {name: input_2, type: String, description: 'input 2 model name'}
+- {name: input_3, type: Artifact, description: 'input 3 model_weight'}
+outputs:
+- {name: output_1, type: Artifact, description: 'output_1 data.'}
+
+implementation:
+  container:
+    image: skywarrd/mar_model
+    command: [
+      sh, 
+      /home/model_mar.sh, 
+      {outputPath: output_1},
+      {inputPath: input_1},
+      {inputValue: input_2},
+      {inputPath: input_3}
+    ]

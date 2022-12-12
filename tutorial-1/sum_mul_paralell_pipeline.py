@@ -18,6 +18,7 @@ def mul(a: float, b: float) -> float:
 )
 def my_pipeline(a: float = 1, b: float = 7, c: float = 2.3):
   add_task_1 = add(a, b)
+  add_task_4 = add(10, 10)
   mul_task_1 = mul(add_task_1.output, c)
   add_task_2 = add(add_task_1.output, mul_task_1.output)
   mul_task_2 = mul(add_task_2.output, mul_task_1.output)
