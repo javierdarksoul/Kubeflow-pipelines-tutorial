@@ -23,17 +23,17 @@ def nnpipeline():
 compiler.Compiler().compile(pipeline_func=nnpipeline, package_path='pipeline.json')
 
 import google.auth
-cred = google.auth.load_credentials_from_file("../../../credentials/credentials.json")
+cred = google.auth.default() #google.auth.load_credentials_from_file("../../../credentials/credentials.json")
 job = aip.PipelineJob(
     display_name="train_nn_pipeline",
     template_path="pipeline.json",
     pipeline_root="gs://test-bucket-dvc",
     credentials=cred[0],
-    project	= "nerf-360414",
-    location = "us-east1",
+    project	= "zippedi-project-01",
+    location = "us-central1",
     parameter_values={
     }
 )
 #print(job)
 job.submit()
-#os.system("rm pipeline.json")
+os.system("rm pipeline.json")
