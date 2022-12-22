@@ -1,9 +1,26 @@
 name: buid_torchserve
-description: convert torch model to MAR model for deployment.
+description: build model to artifact.
+inputs:
+- {name: input_1, type: String, description: 'input 1 model name'}
+- {name: input_2, type: Artifact, description: 'input 2 model mar artifact'}
+- {name: input_3, type: String, description: 'input 3 artifact folder'}
+- {name: input_4, type: String, description: 'input 4 project id'}
+outputs:
+- {name: output_1, type: String, description: 'output_1 uri upload output.'}
 implementation:
   container:
     image: skywarrd/build_torchserve
     command: [
       python, 
-      /home/app/cloudbuild.py
+      /home/app/cloudbuild.py, 
+      --modelname,
+      {inputValue: input_1},
+      --marmodel,
+      {inputPath: input_2},
+      --artifactfolder,
+      {inputValue: input_3},
+      --projectid,
+      {inputValue: input_4},
+      --artifactroute,
+      {outputPath: output_1},
     ]

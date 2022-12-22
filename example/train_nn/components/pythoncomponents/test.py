@@ -11,18 +11,19 @@ from kfp.v2.dsl import (
     output_component_file='',
     base_image='python:3.8',
 )
-def test(source: Input[Artifact],  weights: Input[Artifact], dataset: Input[Artifact], metrics: Output[ClassificationMetrics]):
+def test(source: Input[Artifact],  weights: Input[Artifact], dataset: Input[Artifact], metrics: Output[ClassificationMetrics]) -> float :
     import pickle
     import torch
     import tarfile
     from sklearn.metrics import confusion_matrix
+    from sklearn.metrics import f1_score
     tarfile.open(name=source.path, mode="r").extractall('.')
     from src.nn import my_nn
     with open(dataset.path,'rb') as file:
         dataloaders = pickle.load(file)
     model= my_nn()
     test_loader=dataloaders["test_loader"]
-    model.load_state_dict(torch.load(weights.path))
+    model.load_state_dict(torch.load(weights.path,map_location=torch.device('cpu')))
     y_preds_list=[]
     y_real_list=[]
     for image,label in test_loader:
@@ -37,3 +38,4 @@ def test(source: Input[Artifact],  weights: Input[Artifact], dataset: Input[Arti
         ['T-shirt', 'Trouser', 'Pullover','Dress','Coat', 'Sandal' , 'Shirt','Sneaker','Bag','Ankle Boot'],
         confusion_matrix(y_real_list, y_preds_list).tolist() # .tolist() to convert np array to list.
     )
+    return f1_score(y_real_list, y_preds_list, average='weighted')
