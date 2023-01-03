@@ -5,13 +5,17 @@ import pickle
 import sys
 from torch.utils.data import DataLoader, SubsetRandomSampler
 import torchvision
+import json
 from pathlib import Path
 parser = argparse.ArgumentParser(description='My program description')
 # Paths must be passed in, not hardcoded
 parser.add_argument('--githubpath', type=str,
   help='Path al repositorio git, si es privado, proporcionarlo con el token')
+
 parser.add_argument('--folder', type=str,
   help='Nombre de la carpeta a ser pulleada')
+parser.add_argument('--credentials', type=str,
+  help='credenciales')
 parser.add_argument('--trainloader', type=str,
   help='Path a los archivos comprimidos.')
 parser.add_argument('--testloader', type=str,
@@ -19,10 +23,13 @@ parser.add_argument('--testloader', type=str,
 args = parser.parse_args()
 
 print("begin")
+with open('credentials.json', 'w') as outfile:
+    outfile.write(args.credentials)
+os.system("ls")
 project_name=args.githubpath[args.githubpath.rfind("/") +1 : -4]
 os.system("git clone " + args.githubpath)
 os.chdir(project_name)
-os.system("dvc remote modify --local myremote credentialpath /pipelines/credentials/credentials.json")
+os.system("dvc remote modify --local myremote credentialpath ../credentials.json")
 os.system("dvc pull "+args.folder)
 #with tarfile.open(args.output1path, "w") as tar:
 #  tar.add(args.folder)

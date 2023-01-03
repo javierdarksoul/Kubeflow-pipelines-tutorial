@@ -11,7 +11,7 @@ outputs:
 
 implementation:
   container:
-    image: us-docker.pkg.dev/zippedi-project-01/kubeflow-components/get-data@sha256:a13523a2c5764a7ed34019ab15db33b23bed69f3f871ffbc2c635ebd36892631
+    image: us-docker.pkg.dev/zippedi-project-01/kubeflow-components/get-data@sha256:a368530292992633f0b7775dcfef8480ee320fbf1c2cfebb6b0343149386a0a4
     command: [
       python3, 
       # Path of the program inside the container

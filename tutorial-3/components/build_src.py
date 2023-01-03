@@ -7,7 +7,7 @@ from kfp.v2.dsl import (
 )
 def build_src(source: Output[Artifact]):
     import tarfile
-    code = "import torch \n\
+    code = '''import torch \n\
 class my_nn(torch.nn.Module):\n\
     def __init__(self):\n\
         super(my_nn,self).__init__()\n\
@@ -22,7 +22,7 @@ class my_nn(torch.nn.Module):\n\
         x=self.relu(self.linear2(x))\n\
         x=self.relu(self.linear3(x))\n\
         return self.soft(self.linear4(x))\n\
-"
+'''
     text_file = open("nn.py", "w")
     text_file.write(code)
     text_file.close()

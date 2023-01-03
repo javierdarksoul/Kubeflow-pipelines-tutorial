@@ -1,14 +1,18 @@
 import kfp.dsl as dsl
 from kfp.v2 import compiler
 import kfp
+from secret import access_secret_version
 from kfp.v2.dsl import component
 from kfp.v2.dsl import (
     Output,
     Input,
     Artifact,
 )
+import json
 
+#secret = projects/209915815446/secrets/vertex-ai-secret/versions/1
 
+credentials=access_secret_version("209915815446","vertex-ai-secret", "1")
 get_model=kfp.components.load_component_from_file("components/get_model_component.yaml")
 get_data=kfp.components.load_component_from_file("components/get_data_component.yaml")
 
@@ -37,7 +41,7 @@ def loads(dataset: Input[Artifact],source: Input[Artifact]):
 )
 def nnpipeline():
   src = get_model(githubpath='https://github.com/javierdarksoul/src_test.git')
-  data = get_data(githubpath=' https://github.com/javierdarksoul/data_test.git',folder ="FashionMNIST")
+  data = get_data(githubpath=' https://github.com/javierdarksoul/data_test.git',folder ="FashionMNIST",credentials=credentials)
   load_task= loads(data.outputs['trainloader'],src.outputs['output1path'])
 
 compiler.Compiler().compile(pipeline_func=nnpipeline, package_path='pipeline.json')

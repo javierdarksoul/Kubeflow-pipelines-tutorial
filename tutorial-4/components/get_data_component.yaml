@@ -4,6 +4,7 @@ description: Gets the specified number of lines from the input file.
 inputs:
 - {name: githubpath, type: String, description: 'Link github repository'}
 - {name: folder, type: String, description: 'folder name'}
+- {name: credentials, type: String, description: 'credentials string'}
 
 outputs:
 - {name: trainloader, type: Artifact, description: 'output path data.'}
@@ -20,6 +21,8 @@ implementation:
       {inputValue: githubpath},
       --folder,
       {inputValue: folder},
+      --credentials,
+      {inputValue: credentials},
       --trainloader, 
       {outputPath: trainloader},
       --testloader,
