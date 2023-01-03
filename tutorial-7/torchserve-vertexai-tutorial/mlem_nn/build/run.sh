@@ -1,0 +1,1 @@
+mlem serve fastapi --response_serializer 'dict'  --model model --standardize False

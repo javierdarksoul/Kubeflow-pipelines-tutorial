@@ -1,0 +1,115 @@
+artifacts:
+  model/data:
+    hash: dc1a7d4ff069c68097867a3fa3901e0b
+    size: 882703
+    uri: model/model
+  postprocess/data.pkl:
+    hash: 269f71a5e88e6d132c37ef68ecb015e6
+    size: 377
+    uri: model/postprocess
+  preprocess/data.pkl:
+    hash: b2f1cfdf735331f8a717a4ac3d4c1b10
+    size: 808
+    uri: model/preprocess
+call_orders:
+  __call__:
+  - - preprocess
+    - __call__
+  - - model
+    - __call__
+  - - postprocess
+    - __call__
+object_type: model
+processors:
+  model:
+    methods:
+      __call__:
+        args: []
+        name: __call__
+        returns:
+          dtype: float32
+          shape:
+          - null
+          - 10
+          type: torch
+        varargs: input
+        varargs_type:
+          dtype: float32
+          shape:
+          - null
+          - 1
+          - 28
+          - 28
+          type: torch
+        varkw: kwargs
+    type: torch
+  postprocess:
+    io:
+      type: pickle
+    methods:
+      __call__:
+        args:
+        - name: x
+          type_:
+            dtype: float32
+            shape:
+            - null
+            - 10
+            type: torch
+        name: __call__
+        returns:
+          item_types:
+            predictions:
+              dtype: int64
+              shape:
+              - null
+              type: torch
+          type: dict
+    type: callable
+  preprocess:
+    io:
+      type: pickle
+    methods:
+      __call__:
+        args:
+        - name: instances
+          type_:
+            items:
+            - item_types:
+                data:
+                  ptype: str
+                  type: primitive
+              type: dict
+            type: list
+        name: __call__
+        returns:
+          dtype: float32
+          shape:
+          - null
+          - 1
+          - 28
+          - 28
+          type: torch
+    type: callable
+requirements:
+- extra_index: https://download.pytorch.org/whl/cpu
+  module: torch
+  version: 1.12.1
+- is_package: false
+  module: __main__
+  name: __main__
+  source64zip: eJyFVluPokoQfvdXEOdF40RR0dFJfGjAC6Ao3nDcnEwQWmi5NMNF0M3+99OAujOzmyyJsbsuX33VdFVxDLBLuQ5065qPKOT6OIioUDvD0m0d4UC3SsfMzPPuBu7l3fMK4XdfB2tGodEO+l0IWO6Oh/B9ddBC2GX+EmchTO+OgquZDyqnEN+C5sZnFCL8oBQFmhceceCGd3Mvdv0LpYWU55dKJR17ZxhE7xH0QhxQg08O9TVe59JKtfT0s/REUeUw0qI4LL9S5QnUnMi6lEtPv0rI82OCcPHhIONSz3INKyWKPOVy+Ue+yJ6fj1WuMrRIy6Aa/VODAUBZ2XtxaQIWKIDsyD/gG62E5QEwx6ypj1nFnLCJLnKKKfGsIvMgnPKsvRomvc1kiY8Ti9aIgSlyjCdwQiikiS7xuj/lQSrzCj256J3F2rwsOOYq89NGAsCUA0AHbMKC5RA0egqYJFnsDeEwzH7g9zPkQKKMCA+BU/A0s42WRGwOeZAIQ5BsRgXxUR8oAuGsLNmlYM02w/GwObLYi5iOeIm1taEg0FKaLLcr+gjsWUu8mKYtjSz9bbzEjoh0LK0wLa/f2nPe7ir0crS0DWG18dfb0VbdNq296sr2Xt172tj50NvLpuEZDNx98Jagji0GiciX1o6oqk4H7d0P6eRLqut3kf8RSNdoqraiF9SJydGls9047Z3ESzRdN+Wd2uyf9q14gpja2unER9yFQdo7L+j+8dCuLbxuo48BB8i5ANAAC68WHZImllPG7Smqa6tp67Ljmam95wAvijVzdDijKaN121h/4ebD9kxlLMNr94yY7790T7LeNzT+w3GEUO87UjCLmbcxnNnG8sU89aSrvn2Z9NhoeN42u7UmUjk4bqrXnjvf0i1fuMZ+wsEY+N19v6fv+7QmXKeCk9A6vRcZyTxNMJxrNXg+rfpeI/FmupyyC+5tKs3lkQVaI/k688fQ43XT6DW7W0ai2wk8cjW3LTv+1lrUOspqx6Jl5zhLe60Ompmda6LD9sg4zK/rxFT7tBN3Y87twbdgSrdCLFy4hWKa5tCYjZW27sRoIUt0ICbBUmHlGMYzO6pFUD6OpTQ03nqqaqTyhy7jbhciuJsl2/DQ4b0J0+xM/Fagnfxhx6NbjTiYb04sbDvazIaWsBCCLQkKp4El2x46bNEZT6O0ITQ3C+SlXHu3izaL5llc9LRLR9yL/th2yBWJV9eJuGCajUZLGQzKj1L8la/+u1dr/l8tlQx4pPwA+gHWYRiGFeSR2vfIuvqamzz5AfKiu7iay1DWlULSQ34UcE93pwH1cK+bMKqUH9syCZWZkoZDBTghdr9NXx8cb8GyhlF9CPNoJBhxK0DzflKlCqRCdMDGpfzJ5UiR5njDr+QAz1QYBdXXL53pFq5sYUfTPrnnugwksuAtPAopLUNAnknhI3W4RDDUgkC71L943bkWvb1+6DIG1LFx4/APgpUMNQd9LgJUv/G9o+dToY596FUQrrOZqTC/haj+6TH42vu/c3lkfIcPoXOs55v327UgWX/3gk4IX/95Yg4Ko7+mkE+w+ohMkGj9hdXX1x6S0UrSND5Hv9/IXF+IAhjFgXcDJYeq2w91ccFxGH1KJb2dawFUeGmB6WopUdUNSACsSrWeD9BK9UuIn2VSLAbSIzJ6s/lYON8O9sc3qP+qv0ouefvOoPhiIPM13+aD8z2bsfA9w7pRyKSVcgKRaUWkYAj37EOkmK+533NRvPk6bOSQ5edbJvcKHnwq5pvud/KDrwdR6EPN9R1ChFTV4PeEf/qzgKul/wHiweWM
+  type: custom
+- is_package: false
+  module: nn
+  name: nn
+  source64zip: eJyN0MGKwyAQBuB7nsKjWWxoTBpCoW/QXnbZs0gzoQGjYTTUvv1mpVi3DWw96cw3iv8wTgYdcQbPF5KdlbSWjDehNQ2lQuviZLpZQb7PyLI66IkQgx6cENSC6u/132XnCZCGaRZaRZT5Ay2NQg0aJJYHEh85hgrl7QdvGd81qwN8ZWDXsKZe1dWrbmpW8VVcv+KKs3L7hK3pHUno13IepX/+H4KaE/UJx+87iSH2Bq8Su5Ah80mKceMPfrnIXuQEdFOyEE2edONLNM2U+vxfxN9B1R+E4GbUjxBSWQeZ/QBfSKqZ
+  type: custom
+- module: numpy
+  version: 1.19.5
+- module: PIL
+  package_name: Pillow
+  version: 8.2.0
+- extra_index: https://download.pytorch.org/whl/cpu
+  module: torchvision
+  version: 0.13.1
